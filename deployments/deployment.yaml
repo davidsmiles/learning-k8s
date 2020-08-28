@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: example-deploy
+  name: flask-deploy
   labels:
-    app: example-app
+    app: my-flask-server
 spec:
   selector:
     matchLabels:
-      app: example-app
-  replicas: 3
+      app: my-flask-server
+  replicas: 2
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -17,25 +17,33 @@ spec:
   template:
     metadata:
       labels:
-        app: example-app
+        app: my-flask-server
     spec:
+      volumes:
+        - name: my-volume
+          emptyDir: {}
       containers:
-      - name: example-app
-        image: k8s/python:1.0
-        imagePullPolicy: Never
-        ports:
-        - containerPort: 5000
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 5000
-          initialDelaySeconds: 30
-          periodSeconds: 30
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 5000
-          initialDelaySeconds: 15
-          periodSeconds: 3
+        - name: flask-app
+          image: k8s/python:1.0
+          imagePullPolicy: Never
+          ports:
+          - name: flask-app
+            containerPort: 5000
+            protocol: TCP
+          volumeMounts:
+            - mountPath: /myvol
+              name: my-volume
+          livenessProbe:
+            httpGet:
+              path: /
+              port: flask-app
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: flask-app
+            initialDelaySeconds: 15
+            periodSeconds: 3
       nodeSelector:
         storageType: ssd
